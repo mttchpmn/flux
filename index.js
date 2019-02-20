@@ -25,6 +25,7 @@ const defaultNode = {
   color1: "",
   color2: "",
   pattern: "flash",
+  brightness: 0.75,
   delay: 1000
 };
 
@@ -69,6 +70,7 @@ app.post("/config/node", (req, res) => {
     node.color1 = req.body.color1 || null;
     node.color2 = req.body.color2 || null;
     node.pattern = req.body.pattern || "static";
+    node.brightness = req.body.brightness || 0.75;
     node.delay = req.body.delay || 1000;
 
     // Add new config to db
@@ -89,6 +91,7 @@ app.post("/config/node", (req, res) => {
         color1: req.body.color1 || null,
         color2: req.body.color2 || null,
         pattern: req.body.pattern || "static",
+        brightness: req.body.brightness || 0.75,
         delay: req.body.delay || 1000
       })
       .write();
