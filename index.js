@@ -20,12 +20,13 @@ db.defaults({
 // Logical default to send if we don't have a defined config
 const defaultNode = {
   id: null,
+  state: 1, // 0 = Off, 1 = On
   name: "default",
-  color0: "#42b0f4",
-  color1: "",
-  color2: "",
-  pattern: "flash",
-  brightness: 0.75,
+  r0: 20, // Red value for color 0
+  g0: 100, // Green value for color 0
+  b0: 200, // Blue value for color 0
+  pattern: "static",
+  brightness: 200, // Brightness can be 0 - 255
   delay: 1000
 };
 
@@ -43,14 +44,20 @@ app.get("/", (req, res) => {
 // Endpoint requested by LED node to get its own config
 app.get("/config/node", (req, res) => {
   const ID = req.param("id") || null;
+  const stringify = req.param("stringify") || null; // Stringify double encodes the JSON for the C++ Node
 
   const nodeConfig = db
     .get("nodes")
     .find({ id: ID })
     .value();
 
-  // Send the default config if we don't have id listed for that value
-  res.send(nodeConfig || defaultNode);
+  if (stringify) {
+    // eg ...&stringify=true
+    res.send(JSON.stringify(JSON.stringify(nodeConfig || defaultNode))); // Double encode to escape quotes for use with arduinoJSON library
+  } else {
+    // Send the default config if we don't have id listed for that value
+    res.send(nodeConfig || defaultNode);
+  }
 });
 
 // Endpoint requested by flux app when updating an LED node config
@@ -65,12 +72,13 @@ app.post("/config/node", (req, res) => {
     // Capture parameters
     let node = {};
     node.id = req.body.id; // Required
+    node.state = req.body.state; // Required
     node.name = req.body.name; // Required
-    node.color0 = req.body.color0; // Required
-    node.color1 = req.body.color1 || null;
-    node.color2 = req.body.color2 || null;
+    node.r0 = req.body.r0; // Required
+    node.g0 = req.body.g0; // Required
+    node.b0 = req.body.b0; // Required
     node.pattern = req.body.pattern || "static";
-    node.brightness = req.body.brightness || 0.75;
+    node.brightness = req.body.brightness || 200;
     node.delay = req.body.delay || 1000;
 
     // Add new config to db
@@ -86,12 +94,13 @@ app.post("/config/node", (req, res) => {
     db.get("nodes")
       .find({ id: req.body.id })
       .assign({
+        state: req.body.state, // Required
         name: req.body.name, // Required
-        color0: req.body.color0, // Required
-        color1: req.body.color1 || null,
-        color2: req.body.color2 || null,
+        r0: req.body.r0, // Required
+        g0: req.body.g0, // Required
+        b0: req.body.b0, // Required
         pattern: req.body.pattern || "static",
-        brightness: req.body.brightness || 0.75,
+        brightness: req.body.brightness || 200,
         delay: req.body.delay || 1000
       })
       .write();
