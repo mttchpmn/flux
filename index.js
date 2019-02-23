@@ -42,7 +42,7 @@ app.get("/", (req, res) => {
 });
 
 // Endpoint requested by LED node to get its own config
-app.get("/config/node", (req, res) => {
+app.get("/node", (req, res) => {
   const ID = req.param("id") || null;
   const stringify = req.param("stringify") || null; // Stringify double encodes the JSON for the C++ Node
 
@@ -61,7 +61,7 @@ app.get("/config/node", (req, res) => {
 });
 
 // Endpoint requested by flux app when updating an LED node config
-app.post("/config/node", (req, res) => {
+app.post("/node", (req, res) => {
   const existingNode = db
     .get("nodes")
     .find({ id: req.body.id })
@@ -115,6 +115,16 @@ app.post("/config/node", (req, res) => {
       node: newNode
     });
   }
+});
+
+// Returns array of all node objects
+app.get("/node/list", (req, res) => {
+  const allNodes = db
+    .get("nodes")
+    .sortBy("name")
+    .value();
+
+  res.send(allNodes);
 });
 
 // Run the server
